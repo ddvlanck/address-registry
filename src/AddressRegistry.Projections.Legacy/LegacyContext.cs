@@ -3,6 +3,7 @@ namespace AddressRegistry.Projections.Legacy
     using AddressDetail;
     using AddressList;
     using AddressMatch;
+    using AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream;
     using AddressSyndication;
     using Be.Vlaanderen.Basisregisters.ProjectionHandling.Runner;
     using CrabIdToPersistentLocalId;
@@ -25,6 +26,8 @@ namespace AddressRegistry.Projections.Legacy
         public DbSet<RRAddress> RRAddresses { get; set; }
 
         public DbSet<AddressListViewCount> AddressListViewCount { get; set; }
+
+        public DbSet<AddressLinkedDataEventStreamItem> AddressLinkedDataEventStream { get; set; }
 
         public LegacyContext() { }
 
