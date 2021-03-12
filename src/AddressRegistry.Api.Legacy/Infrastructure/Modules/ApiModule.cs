@@ -63,6 +63,11 @@ namespace AddressRegistry.Api.Legacy.Infrastructure.Modules
                 .RegisterType<ProblemDetailsHelper>()
                 .AsSelf();
 
+            containerBuilder
+                .Register(context => new LinkedDataEventStreamConfiguration(_configuration.GetSection("LinkedDataEventStream")))
+                .As<LinkedDataEventStreamConfiguration>()
+                .SingleInstance();
+
             containerBuilder.Populate(_services);
         }
 

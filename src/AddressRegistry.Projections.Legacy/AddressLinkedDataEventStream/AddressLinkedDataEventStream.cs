@@ -29,7 +29,6 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
         public GeometrySpecification? PositionSpecification { get; set; }
 
         public AddressStatus? Status { get; set; }
-        public bool IsComplete { get; set; }
         public bool IsOfficiallyAssigned { get; set; }
 
         public DateTimeOffset EventGeneratedAtTimeAsDateTimeOffset { get; set; }
@@ -41,6 +40,8 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
         }
 
         public string ObjectHash { get; set; }
+
+        public bool RecordCanBePublished { get; set; }
 
         public AddressLinkedDataEventStreamItem CloneAndApplyEventInfo(
             long position,
@@ -64,8 +65,8 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
                 PointPosition = PointPosition,
                 PositionMethod = PositionMethod,
                 PositionSpecification = PositionSpecification,
-                IsComplete = IsComplete,
-                IsOfficiallyAssigned = IsOfficiallyAssigned
+                IsOfficiallyAssigned = IsOfficiallyAssigned,
+                RecordCanBePublished = RecordCanBePublished
             };
 
             editFunc(newItem);
@@ -76,7 +77,7 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
 
     public class AddressLinkedDataEventStreamConfiguration : IEntityTypeConfiguration<AddressLinkedDataEventStreamItem>
     {
-        private const string TableName = "AddressLinkedDataEventStreamItem";
+        private const string TableName = "AddressLinkedDataEventStream";
         public void Configure(EntityTypeBuilder<AddressLinkedDataEventStreamItem> b)
         {
             b.ToTable(TableName, Schema.Legacy)
@@ -96,7 +97,6 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
 
             b.Property(x => x.Status);
             b.Property(x => x.IsOfficiallyAssigned);
-            b.Property(x => x.IsComplete);
 
             b.Property(x => x.PointPosition);
             b.Property(x => x.PositionMethod);
@@ -104,6 +104,7 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
 
             b.Property(x => x.EventGeneratedAtTimeAsDateTimeOffset).HasColumnName("EventGeneratedAtTime");
             b.Property(x => x.ObjectHash).HasColumnName("ObjectIdentifier");
+            b.Property(x => x.RecordCanBePublished);
 
             b.Ignore(x => x.EventGeneratedAtTime);
 

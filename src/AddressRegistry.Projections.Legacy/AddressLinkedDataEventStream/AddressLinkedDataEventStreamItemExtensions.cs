@@ -36,6 +36,7 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
                 applyEventInfoOn);
 
             newAddressLinkedDataEventStreamItem.SetObjectHash();
+            newAddressLinkedDataEventStreamItem.CheckIfRecordCanBePublished();
 
             await context
                 .AddressLinkedDataEventStream
@@ -58,8 +59,70 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
                    .OrderByDescending(x => x.Position)
                    .FirstOrDefaultAsync(ct);
 
-        public static ProjectionItemNotFoundException<AddressLinkedDataEventStreamProjections> DatabaseItemNotFound(Guid addressId)
-            => new ProjectionItemNotFoundException<AddressLinkedDataEventStreamProjections>(addressId.ToString("D"));
+        public static async Task UpdatePersistentLocalIdentifier(
+            this LegacyContext context,
+            Guid addressId,
+            int persistentLocalId,
+            CancellationToken ct)
+        {
+            var addressItems = context
+                    .AddressLinkedDataEventStream
+                    .Local
+                    .Where(x => x.AddressId == addressId).ToList()
+                ?? await context
+                    .AddressLinkedDataEventStream
+                    .Where(x => x.AddressId == addressId)
+                    .ToListAsync(ct);
+
+            foreach(var item in addressItems)
+            {
+                item.PersistentLocalId = persistentLocalId;
+            }
+
+            await context.SaveChangesAsync();
+        }
+
+        public static async Task AddressWasRemoved(
+            this LegacyContext context,
+            Guid addressId,
+            CancellationToken ct)
+        {
+            var addressItems = context
+                    .AddressLinkedDataEventStream
+                    .Local
+                    .Where(x => x.AddressId == addressId).ToList()
+                ?? await context
+                    .AddressLinkedDataEventStream
+                    .Where(x => x.AddressId == addressId)
+                    .ToListAsync(ct);
+
+            foreach (var item in addressItems)
+            {
+                item.RecordCanBePublished = false;
+            }
+
+            await context.SaveChangesAsync();
+        }
+
+        public static void CheckIfRecordCanBePublished(
+            this AddressLinkedDataEventStreamItem addressLinkedDataEventStreamItem)
+        {
+            var recordCanBePublished = true;
+
+            if (!addressLinkedDataEventStreamItem.AddressId.HasValue || !addressLinkedDataEventStreamItem.StreetNameId.HasValue || string.IsNullOrEmpty(addressLinkedDataEventStreamItem.PostalCode))
+                recordCanBePublished = false;
+
+            if (string.IsNullOrEmpty(addressLinkedDataEventStreamItem.HouseNumber) && string.IsNullOrEmpty(addressLinkedDataEventStreamItem.BoxNumber))
+                recordCanBePublished = false;
+
+            if (addressLinkedDataEventStreamItem.PointPosition == null || addressLinkedDataEventStreamItem.PositionSpecification == null || addressLinkedDataEventStreamItem.PositionMethod == null)
+                recordCanBePublished = false;
+
+            if (addressLinkedDataEventStreamItem.Status == null)
+                recordCanBePublished = false;
+
+            addressLinkedDataEventStreamItem.RecordCanBePublished = recordCanBePublished;
+        }
 
         public static void SetObjectHash(this AddressLinkedDataEventStreamItem addressLinkedDataEventStreamItem)
         {
@@ -69,5 +132,8 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
             var hashBytes = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(objectString));
             addressLinkedDataEventStreamItem.ObjectHash = BitConverter.ToString(hashBytes).Replace("-", string.Empty);
         }
+
+        public static ProjectionItemNotFoundException<AddressLinkedDataEventStreamProjections> DatabaseItemNotFound(Guid addressId)
+            => new ProjectionItemNotFoundException<AddressLinkedDataEventStreamProjections>(addressId.ToString("D"));
     }
 }

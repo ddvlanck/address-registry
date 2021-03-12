@@ -30,6 +30,7 @@ namespace AddressRegistry.Projector.Infrastructure.Modules
     using Be.Vlaanderen.Basisregisters.Projector.ConnectedProjections;
     using Microsoft.Extensions.Options;
     using NetTopologySuite.IO;
+    using AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream;
 
     public class ApiModule : Module
     {
@@ -142,7 +143,8 @@ namespace AddressRegistry.Projector.Infrastructure.Modules
                 .RegisterProjections<AddressVersionProjections, LegacyContext>(
                     () => new AddressVersionProjections(),
                     ConnectedProjectionSettings.Default)
-                .RegisterProjections<CrabIdToPersistentLocalIdProjections, LegacyContext>(ConnectedProjectionSettings.Default);
+                .RegisterProjections<CrabIdToPersistentLocalIdProjections, LegacyContext>(ConnectedProjectionSettings.Default)
+                .RegisterProjections<AddressLinkedDataEventStreamProjections, LegacyContext>(ConnectedProjectionSettings.Default);
         }
     }
 }

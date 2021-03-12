@@ -410,6 +410,99 @@ namespace AddressRegistry.Api.Legacy.Address
             return Ok(response);
         }
 
+        /// <summary>
+        /// Vraag een lijst met wijzigingen van adressen op, semantisch geannoteerd (Linked Data Event Stream).
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="context"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [HttpGet("linked-data-event-stream")]
+        [Produces("application/ld+json")]
+        [ProducesResponseType(typeof(AddressLinkedDataEventStreamResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(AddressLinkedDataEventStreamResponseExamples))]
+        [SwaggerResponseExample(StatusCodes.Status500InternalServerError, typeof(InternalServerErrorResponseExamples))]
+        public async Task<IActionResult> LinkedDataEventStream(
+            [FromServices] LinkedDataEventStreamConfiguration configuration,
+            [FromServices] LegacyContext context,
+            [FromServices] SyndicationContext syndicationContext,
+            CancellationToken cancellationToken = default)
+        {
+            var filtering = Request.ExtractFilteringRequest<AddressLinkedDataEventStreamFilter>();
+            var sorting = Request.ExtractSortingRequest();
+            var pagination = Request.ExtractPaginationRequest();
+
+            var paginationHeader = Request.Headers["x-pagination"].ToString().Split(",");
+            var offset = Int32.Parse(paginationHeader[0]);
+            var pageSize = Int32.Parse(paginationHeader[1]);
+            var page = (offset / pageSize) + 1;
+
+            var pagedAddressSet =
+                new AddressLinkedDataEventStreamQuery(context)
+                .Fetch(filtering, sorting, pagination);
+
+            List<AddressVersionObject> addressVersionObjects = new List<AddressVersionObject>();
+
+            foreach(var queryResult in pagedAddressSet.Items)
+            {
+                var streetName = await syndicationContext.StreetNameLatestItems.FindAsync(new object[] { queryResult.StreetNameId }, cancellationToken);
+                var municipality = await syndicationContext.MunicipalityLatestItems.FirstAsync(m => m.NisCode == streetName.NisCode, cancellationToken);
+
+                var pointPosition = AddressMapper.GetAddressPoint(queryResult.PointPosition);
+
+                addressVersionObjects.Add(new AddressVersionObject(
+                    configuration,
+                    queryResult.ObjectIdentifier,
+                    queryResult.ChangeType,
+                    queryResult.EventGeneratedAtTime,
+                    queryResult.PersistentLocalId,
+                    queryResult.PostalCode,
+                    queryResult.HouseNumber,
+                    queryResult.BoxNumber,
+                    pointPosition.XmlPoint.Pos,
+                    queryResult.PositionMethod,
+                    queryResult.PositionSpecification,
+                    queryResult.Status,
+                    queryResult.IsOfficiallyAssigned,
+                    streetName.PersistentLocalId,
+                    municipality
+                ));
+            }
+
+            return Ok(new AddressLinkedDataEventStreamResponse
+            {
+                Context = new AddressLinkedDataEventStreamContext(),
+                Id = AddressLinkedDataEventStreamMetadata.GetPageIdentifier(configuration, page),
+                CollectionLink = AddressLinkedDataEventStreamMetadata.GetCollectionLink(configuration),
+                AddressShape = new Uri($"{configuration.ApiEndpoint}/shape"),
+                HypermediaControls = AddressLinkedDataEventStreamMetadata.GetHypermediaControls(addressVersionObjects, configuration, page, pageSize),
+                Items = addressVersionObjects
+            }) ;
+        }
+
+        /// <summary>
+        /// Vraag de SHACL Shape van adressen op.
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [HttpGet("linked-data-event-stream/shape")]
+        [Produces("application/ld+json")]
+        [ProducesResponseType(typeof(AddressShaclShapeResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(AddressShaclShapeResponseExamples))]
+        [SwaggerResponseExample(StatusCodes.Status500InternalServerError, typeof(InternalServerErrorResponseExamples))]
+        public async Task<IActionResult> Shape(
+            [FromServices] LinkedDataEventStreamConfiguration configuration,
+            CancellationToken ct)
+        {
+            return Ok(new AddressShaclShapeResponse
+            {
+                Id = new Uri($"{configuration.ApiEndpoint}/shape")
+            });
+        }
+
         private static async Task<string> BuildAtomFeed(
             DateTimeOffset lastFeedUpdate,
             PagedQueryable<AddressSyndicationQueryResult> pagedAddresses,

@@ -27,6 +27,7 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
                 };
 
                 addressLinkedDataEventStreamItem.SetObjectHash();
+                addressLinkedDataEventStreamItem.CheckIfRecordCanBePublished();
 
                 await context
                     .AddressLinkedDataEventStream
@@ -35,11 +36,11 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
 
             When<Envelope<AddressBecameComplete>>(async (context, message, ct) =>
             {
-                await context.CreateNewAddressLinkedDataEventStreamItem(
+                /*await context.CreateNewAddressLinkedDataEventStreamItem(
                     message.Message.AddressId,
                     message,
                     x => x.IsComplete = true,
-                    ct);
+                    ct);*/
             });
 
             When<Envelope<AddressBecameCurrent>>(async (context, message, ct) =>
@@ -53,11 +54,11 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
 
             When<Envelope<AddressBecameIncomplete>>(async (context, message, ct) =>
             {
-                await context.CreateNewAddressLinkedDataEventStreamItem(
+                /*await context.CreateNewAddressLinkedDataEventStreamItem(
                     message.Message.AddressId,
                     message,
                     x => x.IsComplete = false,
-                    ct);
+                    ct);*/
             });
 
             When<Envelope<AddressBecameNotOfficiallyAssigned>>(async (context, message, ct) =>
@@ -293,10 +294,8 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
 
             When<Envelope<AddressWasRemoved>>(async (context, message, ct) =>
             {
-                await context.CreateNewAddressLinkedDataEventStreamItem(
+                await context.AddressWasRemoved(
                     message.Message.AddressId,
-                    message,
-                    x => { },
                     ct);
             });
 
@@ -311,10 +310,9 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
 
             When<Envelope<AddressPersistentLocalIdWasAssigned>>(async (context, message, ct) =>
             {
-                await context.CreateNewAddressLinkedDataEventStreamItem(
+                await context.UpdatePersistentLocalIdentifier(
                     message.Message.AddressId,
-                    message,
-                    x => x.PersistentLocalId = message.Message.PersistentLocalId,
+                    message.Message.PersistentLocalId,
                     ct);
             });
         }
