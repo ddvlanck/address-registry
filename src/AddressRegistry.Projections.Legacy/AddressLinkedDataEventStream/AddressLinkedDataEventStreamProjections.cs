@@ -26,8 +26,8 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
                     ChangeType = message.EventName
                 };
 
-                addressLinkedDataEventStreamItem.SetObjectHash();
                 addressLinkedDataEventStreamItem.CheckIfRecordCanBePublished();
+                addressLinkedDataEventStreamItem.SetObjectHash();
 
                 await context
                     .AddressLinkedDataEventStream

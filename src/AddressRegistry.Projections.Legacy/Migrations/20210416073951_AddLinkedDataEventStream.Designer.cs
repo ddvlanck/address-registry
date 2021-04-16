@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AddressRegistry.Projections.Legacy.Migrations
 {
     [DbContext(typeof(LegacyContext))]
-    [Migration("20210310171626_AddTableForLinkedDataEventStream")]
-    partial class AddTableForLinkedDataEventStream
+    [Migration("20210416073951_AddLinkedDataEventStream")]
+    partial class AddLinkedDataEventStream
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -152,10 +152,10 @@ namespace AddressRegistry.Projections.Legacy.Migrations
                     b.HasIndex("PersistentLocalId");
 
                     b.HasIndex("Position")
-                        .HasDatabaseName("CI_AddressLinkedDataEventStream_Position")
+                        .HasDatabaseName("CI_Address_Position")
                         .HasAnnotation("SqlServer:ColumnStoreIndex", "");
 
-                    b.ToTable("AddressLinkedDataEventStream", "AddressRegistryLegacy");
+                    b.ToTable("Address", "AddressRegistryLdes");
                 });
 
             modelBuilder.Entity("AddressRegistry.Projections.Legacy.AddressList.AddressListItem", b =>

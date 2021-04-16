@@ -3,13 +3,16 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AddressRegistry.Projections.Legacy.Migrations
 {
-    public partial class AddTableForLinkedDataEventStream : Migration
+    public partial class AddLinkedDataEventStream : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "AddressRegistryLdes");
+
             migrationBuilder.CreateTable(
-                name: "AddressLinkedDataEventStream",
-                schema: "AddressRegistryLegacy",
+                name: "Address",
+                schema: "AddressRegistryLdes",
                 columns: table => new
                 {
                     Position = table.Column<long>(type: "bigint", nullable: false),
@@ -31,34 +34,34 @@ namespace AddressRegistry.Projections.Legacy.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AddressLinkedDataEventStream", x => x.Position)
+                    table.PrimaryKey("PK_Address", x => x.Position)
                         .Annotation("SqlServer:Clustered", true);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "CI_AddressLinkedDataEventStream_Position",
-                schema: "AddressRegistryLegacy",
-                table: "AddressLinkedDataEventStream",
+                name: "CI_Address_Position",
+                schema: "AddressRegistryLdes",
+                table: "Address",
                 column: "Position");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AddressLinkedDataEventStream_AddressId",
-                schema: "AddressRegistryLegacy",
-                table: "AddressLinkedDataEventStream",
+                name: "IX_Address_AddressId",
+                schema: "AddressRegistryLdes",
+                table: "Address",
                 column: "AddressId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AddressLinkedDataEventStream_PersistentLocalId",
-                schema: "AddressRegistryLegacy",
-                table: "AddressLinkedDataEventStream",
+                name: "IX_Address_PersistentLocalId",
+                schema: "AddressRegistryLdes",
+                table: "Address",
                 column: "PersistentLocalId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "AddressLinkedDataEventStream",
-                schema: "AddressRegistryLegacy");
+                name: "Address",
+                schema: "AddressRegistryLdes");
         }
     }
 }

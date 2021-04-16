@@ -9,6 +9,7 @@ namespace AddressRegistry.Infrastructure
         public const string Extract = "AddressRegistryExtract";
         public const string Syndication = "AddressRegistrySyndication";
         public const string Sequence = "AddressRegistrySequence";
+        public const string LinkedDataEventStream = "AddressRegistryLdes";
     }
 
     public class MigrationTables

@@ -4,10 +4,12 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
     using Be.Vlaanderen.Basisregisters.ProjectionHandling.Runner.MigrationExtensions;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
+    using Newtonsoft.Json;
     using NodaTime;
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Security.Cryptography;
     using System.Text;
     using System.Threading.Tasks;
 
@@ -70,17 +72,28 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
             };
 
             editFunc(newItem);
+            newItem.SetObjectHash();
 
             return newItem;
+        }
+
+        public void SetObjectHash()
+        {
+            ObjectHash = string.Empty;
+            var objectString = JsonConvert.SerializeObject(this);
+
+            using var md5Hash = MD5.Create();
+            var hashBytes = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(objectString));
+            ObjectHash = BitConverter.ToString(hashBytes).Replace("-", string.Empty);
         }
     }
 
     public class AddressLinkedDataEventStreamConfiguration : IEntityTypeConfiguration<AddressLinkedDataEventStreamItem>
     {
-        private const string TableName = "AddressLinkedDataEventStream";
+        private const string TableName = "Address";
         public void Configure(EntityTypeBuilder<AddressLinkedDataEventStreamItem> b)
         {
-            b.ToTable(TableName, Schema.Legacy)
+            b.ToTable(TableName, Schema.LinkedDataEventStream)
                 .HasKey(x => x.Position)
                 .IsClustered();
 

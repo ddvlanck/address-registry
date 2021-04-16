@@ -35,7 +35,6 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
                 provenance.Timestamp,
                 applyEventInfoOn);
 
-            newAddressLinkedDataEventStreamItem.SetObjectHash();
             newAddressLinkedDataEventStreamItem.CheckIfRecordCanBePublished();
 
             await context
@@ -122,15 +121,6 @@ namespace AddressRegistry.Projections.Legacy.AddressLinkedDataEventStream
                 recordCanBePublished = false;
 
             addressLinkedDataEventStreamItem.RecordCanBePublished = recordCanBePublished;
-        }
-
-        public static void SetObjectHash(this AddressLinkedDataEventStreamItem addressLinkedDataEventStreamItem)
-        {
-            var objectString = JsonConvert.SerializeObject(addressLinkedDataEventStreamItem);
-
-            using var md5Hash = MD5.Create();
-            var hashBytes = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(objectString));
-            addressLinkedDataEventStreamItem.ObjectHash = BitConverter.ToString(hashBytes).Replace("-", string.Empty);
         }
 
         public static ProjectionItemNotFoundException<AddressLinkedDataEventStreamProjections> DatabaseItemNotFound(Guid addressId)

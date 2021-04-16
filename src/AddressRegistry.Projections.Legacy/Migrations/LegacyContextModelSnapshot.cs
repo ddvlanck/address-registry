@@ -150,10 +150,10 @@ namespace AddressRegistry.Projections.Legacy.Migrations
                     b.HasIndex("PersistentLocalId");
 
                     b.HasIndex("Position")
-                        .HasDatabaseName("CI_AddressLinkedDataEventStream_Position")
+                        .HasDatabaseName("CI_Address_Position")
                         .HasAnnotation("SqlServer:ColumnStoreIndex", "");
 
-                    b.ToTable("AddressLinkedDataEventStream", "AddressRegistryLegacy");
+                    b.ToTable("Address", "AddressRegistryLdes");
                 });
 
             modelBuilder.Entity("AddressRegistry.Projections.Legacy.AddressList.AddressListItem", b =>
